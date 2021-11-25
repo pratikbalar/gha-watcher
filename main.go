@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type RunningWorkflow struct {
@@ -27,6 +25,7 @@ type RunningActionResponse struct {
 	WorkflowRuns []RunningWorkflow `json:"workflow_runs"`
 }
 
+// Github api call
 func apiCall(method string, url string, body io.Reader) []byte {
 	username := os.Getenv("GITHUB_USERNAME")
 	token := os.Getenv("GITHUB_TOKEN")
@@ -48,18 +47,17 @@ func apiCall(method string, url string, body io.Reader) []byte {
 	return data
 }
 
+// Restart actions
 func restartAction(flow *RunningWorkflow) {
-
 	// Cancel workflow
 	apiCall("POST", flow.CancelUrl, nil)
 
 	// ReRun workflow
 	apiCall("POST", flow.ReRunUrl, nil)
-
 }
 
+// Github actions checker
 func ghActionCheck() {
-
 	body := apiCall("GET", "https://api.github.com/repos/Improwised/apricot-2/actions/runs?status=in_progress", nil)
 
 	fres := RunningActionResponse{}
@@ -82,13 +80,12 @@ func ghActionCheck() {
 		}
 
 	}
-
 }
 
 func main() {
-	godotenv.Load()
-	ghActionCheck()
-	// for {
-	// 	time.Sleep(1 * time.Minute)
-	// }
+	log.Println("Starting...")
+	for {
+		ghActionCheck()
+		time.Sleep(1 * time.Minute)
+	}
 }
